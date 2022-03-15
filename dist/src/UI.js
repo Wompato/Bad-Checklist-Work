@@ -1,4 +1,6 @@
-export default class UI {
+import Debtor from "./Debtor.js";
+
+class UI {
     constructor() {
         this.dropZoneInput = document.querySelector('.drop-zone__input')
         this.dropZone = document.querySelector('.drop-zone')
@@ -13,7 +15,7 @@ export default class UI {
         this.fileList = [];
     }
 
-    static createDebtorHTML(debtor, parCont) {
+    createDebtorHTML(debtor, parCont) {
         const debtorItem = document.createElement('div');
         debtorItem.classList.add('ranStu');
     
@@ -32,17 +34,16 @@ export default class UI {
         debtorItem.appendChild(divider);
         debtorItem.appendChild(debtorLID);
     
-        parCont.appendChild(debtorItem);
-        
+        parCont.appendChild(debtorItem); 
     };
 
-    static createDebtorView(array, parCont) {
+    createDebtorView(array, parCont) {
         array.forEach((debtor)=>{
-            UI.createDebtorHTML(debtor, parCont)
+            this.createDebtorHTML(debtor, parCont)
         })
     }
 
-    static createFilteredListHTML(filterPlaceholder) {
+    createFilteredListHTML(filterPlaceholder) {
         const section = document.createElement('section');
         const h2 = document.createElement('h2');
         const div = document.createElement('div');
@@ -61,6 +62,39 @@ export default class UI {
             div,
             h2
         };
+    }
+
+    renderBkstrJSON(spreadsheet, container) {
+        // turns the excel spreadsheet into debtor objects
+        const debtorList = spreadsheet.map(person => {
+            return new Debtor(`${person.cu_lname} ${person.cu_fname}`, person.cu_student_id)
+        })
+        // takes debtor objs transforms them into html and renders them to screen
+        this.bookstrList = [...debtorList]
+        this.createDebtorView(debtorList, container)
+    }
+    
+    renderAccJSON(spreadsheet, container) {
+        // person[Object.keys(person)[0]] is to find the first value 
+        // of the spreadsheet (the LID) 
+        // the 00 is needed at the start of all ids but for some reason
+        // xlsx keeps removing the 00 on this spreadsheet so I'm adding it manually
+        const filteredSprdsheet = spreadsheet.filter(person => {
+            if(person.Name === undefined){
+                return
+            }
+            if(person.Name === 'Name'){
+                return
+            }
+            return person
+        })
+    
+        const debtorList = filteredSprdsheet.map(person => {
+            return new Debtor(`${person.Name}`, `${'00' + person[Object.keys(person)[0]]}`)
+        })
+    
+        this.accList = [...debtorList]
+        this.createDebtorView(debtorList, container)
     }
 
     updateThumbnail(dropZoneElement, file) {
@@ -91,3 +125,7 @@ export default class UI {
         thumbnailElement.style.backgroundImage = 'url(public/images/excelImage.png)';
     } 
 }
+
+const uiSingelton = new UI();
+
+export {uiSingelton}
